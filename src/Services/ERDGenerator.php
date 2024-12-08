@@ -16,6 +16,7 @@ class ERDGenerator
      * @param string|null $format The output format (e.g., 'pdf', 'png', 'svg').
      * @param string|null $outputPath The directory where the diagram will be saved.
      * @return string The full path to the generated file.
+     * @throws InvalidConnectionNameException
      * @throws Exception
      */
     public function generate(?string $format = null, ?string $outputPath = null): string
@@ -55,13 +56,7 @@ class ERDGenerator
         $relationResolver->setConnection(config('erd.connection'));
 
         $tableRelationClass = $relationResolver->resolve();
-        $tables = $tableRelationClass->getTableRelations();
-
-        $tables = [];
-
-
-
-        return $tables;
+        return $tableRelationClass->getTableRelations();
     }
 
     /**
