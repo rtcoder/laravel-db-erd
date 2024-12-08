@@ -22,8 +22,8 @@ class TableRelationResolver
     {
         return match ($this->db_connection) {
             'psql' => new PostgresTableRelation(),
-            'mysql' => new MySQLTableRelation(),
-            'sqlite' => new SQLiteTableRelation(),
+            'mysql' => new MysqlTableRelation(),
+            'sqlite' => new SqliteTableRelation(),
             default => throw new InvalidConnectionNameException()
         };
     }
