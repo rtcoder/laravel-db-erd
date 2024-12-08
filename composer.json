@@ -1,0 +1,31 @@
+{
+  "name": "rtcoder/laravel-db-erd",
+  "description": "Laravel package to generate database ERD diagrams.",
+  "type": "library",
+  "license": "MIT",
+  "require": {
+    "php": "^8.0",
+    "laravel/framework": "^10.0"
+  },
+  "autoload": {
+    "psr-4": {
+      "Rtcoder\\LaravelERD\\": "src/"
+    }
+  },
+  "extra": {
+    "laravel": {
+      "providers": [
+        "Rtcoder\\LaravelERD\\Providers\\ERDServiceProvider"
+      ]
+    }
+  },
+  "authors": [
+    {
+      "name": "Dawid Jeż",
+      "email": "dawidjez@gmail.com"
+    }
+  ],
+  "require-dev": {
+    "phpunit/phpunit": "^10.5"
+  }
+}
