@@ -3,6 +3,8 @@
   "description": "Laravel package to generate database ERD diagrams.",
   "type": "library",
   "license": "MIT",
+  "minimum-stability": "dev",
+  "prefer-stable": true,
   "require": {
     "php": "^8.0",
     "laravel/framework": "^10.0"
