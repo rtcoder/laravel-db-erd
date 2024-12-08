@@ -13,6 +13,7 @@ return [
     'output_name' => 'erd_diagram',
     /**
      * psql - PostgreSQL
+     * mysql - MySQL
      */
     'connection' => 'psql'
 ];

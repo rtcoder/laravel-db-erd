@@ -22,6 +22,7 @@ class TableRelationResolver
     {
         return match ($this->db_connection) {
             'psql' => new PostgresTableRelation(),
+            'mysql' => new MySQLTableRelation(),
             default => throw new InvalidConnectionNameException()
         };
     }
