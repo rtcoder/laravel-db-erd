@@ -14,6 +14,7 @@ return [
     /**
      * psql - PostgreSQL
      * mysql - MySQL
+     * sqlite - SQLite
      */
     'connection' => 'psql'
 ];
