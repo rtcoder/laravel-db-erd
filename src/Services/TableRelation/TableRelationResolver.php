@@ -24,6 +24,7 @@ class TableRelationResolver
             'psql' => new PostgresTableRelation(),
             'mysql' => new MysqlTableRelation(),
             'sqlite' => new SqliteTableRelation(),
+            'sqlsrv' => new SqlServerTableRelation(),
             default => throw new InvalidConnectionNameException()
         };
     }

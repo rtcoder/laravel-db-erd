@@ -15,6 +15,7 @@ return [
      * psql - PostgreSQL
      * mysql - MySQL
      * sqlite - SQLite
+     * sqlsrv - Microsoft SQL Server
      */
     'connection' => 'psql'
 ];
