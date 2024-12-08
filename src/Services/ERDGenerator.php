@@ -11,26 +11,31 @@ class ERDGenerator
     /**
      * Generate an ERD diagram and save it to a file.
      *
-     * @param string $format The output format (e.g., 'pdf', 'png', 'svg').
-     * @param string $outputPath The directory where the diagram will be saved.
+     * @param string|null $format The output format (e.g., 'pdf', 'png', 'svg').
+     * @param string|null $outputPath The directory where the diagram will be saved.
      * @return string The full path to the generated file.
      * @throws Exception
      */
-    public function generate(string $format, string $outputPath): string
+    public function generate(?string $format = null, ?string $outputPath = null): string
     {
-        $tables = $this->getTablesAndRelations();
+        if (is_null($format)) {
+            $format = config('erd.output_format');
+        }
+        if (is_null($outputPath)) {
+            $outputPath = config('erd.output_path');
+        }
 
-        // Validate format
         $supportedFormats = ['pdf', 'png', 'svg'];
         if (!in_array($format, $supportedFormats)) {
             throw new \InvalidArgumentException("Unsupported format: $format");
         }
 
-        // Create the graph representation
+        $tables = $this->getTablesAndRelations();
+
         $dotGraph = $this->generateDotGraph($tables);
 
-        // Save the graph to a file
-        $outputFile = rtrim($outputPath, '/') . "/erd_diagram.$format";
+        $filename = config('erd.output_name');
+        $outputFile = rtrim($outputPath, '/') . "/$filename.$format";
         $this->renderGraph($dotGraph, $outputFile, $format);
 
         return $outputFile;
@@ -158,6 +163,7 @@ class ERDGenerator
             throw new Exception("Graphviz failed to render the graph. Make sure Graphviz is installed.");
         }
     }
+
     private function ensureDirectoryExists(string $directory): void
     {
         if (!is_dir($directory)) {
