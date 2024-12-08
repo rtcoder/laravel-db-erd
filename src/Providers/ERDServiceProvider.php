@@ -1,5 +1,5 @@
 <?php
-namespace Rtcoder\Providers;
+namespace Rtcoder\LaravelERD\Providers;
 
 use Illuminate\Support\ServiceProvider;
 use Rtcoder\LaravelERD\Commands\GenerateERDCommand;
