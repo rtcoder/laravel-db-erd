@@ -25,6 +25,7 @@ class TableRelationResolver
             'mysql' => new MysqlTableRelation(),
             'sqlite' => new SqliteTableRelation(),
             'sqlsrv' => new SqlServerTableRelation(),
+            'oracle' => new OracleTableRelation(),
             default => throw new InvalidConnectionNameException()
         };
     }
