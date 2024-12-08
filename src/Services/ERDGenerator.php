@@ -4,6 +4,7 @@ namespace Rtcoder\LaravelERD\Services;
 
 use Exception;
 use Illuminate\Support\Facades\DB;
+use RuntimeException;
 
 class ERDGenerator
 {
@@ -43,33 +44,51 @@ class ERDGenerator
     protected function getTablesAndRelations(): array
     {
         $tables = [];
-        $databaseName = DB::connection()->getDatabaseName();
 
-        // Fetch tables
-        $rawTables = DB::select("SELECT TABLE_NAME FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_SCHEMA = ?", [$databaseName]);
+        $tableSchema = 'public';
+
+        $rawTables = DB::select("
+            SELECT table_name 
+            FROM INFORMATION_SCHEMA.TABLES 
+            WHERE TABLE_SCHEMA = ?
+            
+        ", [$tableSchema]);
+
         foreach ($rawTables as $table) {
-            $tableName = $table->TABLE_NAME;
+            $tableName = $table->table_name;
 
             // Fetch foreign keys for the table
             $foreignKeys = DB::select("
-                SELECT
-                    COLUMN_NAME,
-                    REFERENCED_TABLE_NAME,
-                    REFERENCED_COLUMN_NAME
-                FROM
-                    INFORMATION_SCHEMA.KEY_COLUMN_USAGE
-                WHERE
-                    TABLE_SCHEMA = ?
-                    AND TABLE_NAME = ?
-                    AND REFERENCED_TABLE_NAME IS NOT NULL
-            ", [$databaseName, $tableName]);
+                SELECT 
+                    tc.table_name AS source_table,
+                    kcu.column_name AS source_column,
+                    ccu.table_name AS target_table,
+                    ccu.column_name AS target_column
+                FROM 
+                    information_schema.table_constraints AS tc
+                JOIN 
+                    information_schema.key_column_usage AS kcu
+                ON 
+                    tc.constraint_name = kcu.constraint_name
+                    AND tc.table_schema = kcu.table_schema
+                JOIN 
+                    information_schema.constraint_column_usage AS ccu
+                ON 
+                    ccu.constraint_name = tc.constraint_name
+                    AND ccu.table_schema = tc.table_schema
+                WHERE 
+                    tc.constraint_type = 'FOREIGN KEY'
+                    AND tc.table_schema = 'public'
+                    AND tc.table_name = ?;
+
+            ",[$tableName]);
 
             $relations = [];
             foreach ($foreignKeys as $fk) {
                 $relations[] = [
-                    'column' => $fk->COLUMN_NAME,
-                    'referenced_table' => $fk->REFERENCED_TABLE_NAME,
-                    'referenced_column' => $fk->REFERENCED_COLUMN_NAME,
+                    'column' => $fk->source_column,
+                    'referenced_table' => $fk->target_table,
+                    'referenced_column' => $fk->target_column,
                 ];
             }
 
@@ -124,6 +143,9 @@ class ERDGenerator
      */
     protected function renderGraph(string $dotGraph, string $outputFile, string $format): void
     {
+        $directory = dirname($outputFile);
+        $this->ensureDirectoryExists($directory);
+
         $tempFile = tempnam(sys_get_temp_dir(), 'erd') . '.dot';
         file_put_contents($tempFile, $dotGraph);
 
@@ -134,6 +156,14 @@ class ERDGenerator
 
         if ($returnVar !== 0) {
             throw new Exception("Graphviz failed to render the graph. Make sure Graphviz is installed.");
+        }
+    }
+    private function ensureDirectoryExists(string $directory): void
+    {
+        if (!is_dir($directory)) {
+            if (!mkdir($directory, 0755, true) && !is_dir($directory)) {
+                throw new RuntimeException("Failed to create directory: $directory");
+            }
         }
     }
 }
