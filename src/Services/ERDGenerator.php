@@ -25,7 +25,7 @@ class ERDGenerator
             $format = config('erd.output_format');
         }
         if (is_null($outputPath)) {
-            $outputPath = config('erd.output_path');
+            $outputPath = config('erd.output_directory');
         }
 
         $supportedFormats = ['pdf', 'png', 'svg'];
@@ -53,7 +53,7 @@ class ERDGenerator
     protected function getTablesAndRelations(): array
     {
         $relationResolver = new TableRelationResolver();
-        $relationResolver->setConnection(config('erd.connection'));
+        $relationResolver->setConnection(config('erd.default_driver'));
 
         $tableRelationClass = $relationResolver->resolve();
         return $tableRelationClass->getTableRelations();
