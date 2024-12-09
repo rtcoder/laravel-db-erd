@@ -1,7 +1,22 @@
 <?php
 
 return [
-    'exclude_tables' => ['migrations', 'jobs', 'failed_jobs'],
+    /**
+     * psql - PostgreSQL
+     * mysql - MySQL
+     * sqlite - SQLite
+     * sqlsrv - Microsoft SQL Server
+     * oracle - Oracle database
+     */
+    'default_driver' => env('DB_ERD_DRIVER', 'psql'),
+    'output_directory' => storage_path('erd'),
+    'output_name' => 'erd_diagram',
+    /**
+     * Supported formats:
+     * - png
+     * - pdf
+     * - svg
+     */
     'output_format' => 'pdf',
-    'output_path' => storage_path('erd'),
+    'exclude_tables' => ['migrations', 'jobs', 'failed_jobs'],
 ];

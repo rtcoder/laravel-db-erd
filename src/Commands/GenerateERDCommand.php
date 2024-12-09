@@ -16,7 +16,7 @@ class GenerateERDCommand extends Command
     public function handle(): void
     {
         $generator = new ERDGenerator();
-        $path = $generator->generate('pdf', storage_path('erd'));
+        $path = $generator->generate();
         $this->info("ERD diagram saved to: $path");
     }
 }
