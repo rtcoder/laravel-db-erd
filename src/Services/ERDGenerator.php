@@ -13,47 +13,43 @@ class ERDGenerator
     /**
      * Generate an ERD diagram and save it to a file.
      *
-     * @param string|null $format The output format (e.g., 'pdf', 'png', 'svg').
-     * @param string|null $outputPath The directory where the diagram will be saved.
-     * @return string The full path to the generated file.
-     * @throws InvalidConnectionNameException
+     * @param string $outputFile
+     * @param string $driver
+     * @return void The full path to the generated file.
      * @throws Exception
      */
-    public function generate(?string $format = null, ?string $outputPath = null): string
+    public function generate(string $outputFile, string $driver): void
     {
-        if (is_null($format)) {
-            $format = config('erd.output_format');
-        }
-        if (is_null($outputPath)) {
-            $outputPath = config('erd.output_directory');
-        }
+        $format = pathinfo($outputFile, PATHINFO_EXTENSION);
 
-        $supportedFormats = ['pdf', 'png', 'svg'];
+        $supportedFormats = ['pdf', 'png', 'svg', 'html'];
         if (!in_array($format, $supportedFormats)) {
             throw new InvalidArgumentException("Unsupported format: $format");
         }
 
-        $tables = $this->getTablesAndRelations();
+        $tables = $this->getTablesAndRelations($driver);
+
+        if ($format === 'html') {
+            $this->renderGraphHtml($tables, $outputFile);
+            return;
+        }
 
         $dotGraph = $this->generateDotGraph($tables);
 
-        $filename = config('erd.output_name');
-        $outputFile = rtrim($outputPath, '/') . "/$filename.$format";
         $this->renderGraph($dotGraph, $outputFile, $format);
-
-        return $outputFile;
     }
 
     /**
      * Get tables and their relationships from the database.
      *
+     * @param string $driver
      * @return array
      * @throws InvalidConnectionNameException
      */
-    protected function getTablesAndRelations(): array
+    protected function getTablesAndRelations(string $driver): array
     {
         $relationResolver = new TableRelationResolver();
-        $relationResolver->setConnection(config('erd.default_driver'));
+        $relationResolver->setConnection($driver);
 
         $tableRelationClass = $relationResolver->resolve();
         return $tableRelationClass->getTableRelations();
@@ -115,6 +111,37 @@ class ERDGenerator
         if ($returnVar !== 0) {
             throw new Exception("Graphviz failed to render the graph. Make sure Graphviz is installed.");
         }
+    }
+
+    protected function renderGraphHtml(array $tables, string $outputFile): void
+    {
+        $directory = dirname($outputFile);
+        $this->ensureDirectoryExists($directory);
+
+        // Konwertowanie danych na format dla D3.js
+        $nodes = [];
+        $links = [];
+        foreach ($tables as $table) {
+            $nodes[] = ['id' => $table['name'], 'name' => $table['name']];
+            foreach ($table['relations'] as $relation) {
+                $links[] = [
+                    'source' => $table['name'],
+                    'target' => $relation['referenced_table'],
+                    'value' => 1
+                ];
+            }
+        }
+
+        $diagramData = [
+            'nodes' => $nodes,
+            'links' => $links,
+        ];
+
+        // Renderowanie widoku Blade jako string
+        $htmlContent = view('erd-diagram', compact('diagramData'))->render();
+
+        // Zapisanie pliku HTML
+        file_put_contents($outputFile, $htmlContent);
     }
 
     private function ensureDirectoryExists(string $directory): void

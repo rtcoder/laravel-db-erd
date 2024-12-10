@@ -53,7 +53,7 @@ Download and install from [Graphviz's official site](https://graphviz.org/).
 ## Usage
 **Generate an ERD** Run the following Artisan command to generate the ERD:
 ```bash
-php artisan erd:generate --output=storage/erd/erd_diagram.pdf
+php artisan erd:generate --output=storage/erd/erd_diagram.pdf --driver=mysql
 ```
 The `--output` option specifies the file path for the generated diagram.
 
@@ -68,6 +68,7 @@ The `--output` option specifies the file path for the generated diagram.
 * PDF
 * SVG
 * PNG
+* HTML
 
 ## Configuration
 You can customize the package by modifying the configuration file (`config/db-erd.php`):
