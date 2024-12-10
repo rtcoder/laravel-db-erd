@@ -16,6 +16,7 @@ return [
      * - png
      * - pdf
      * - svg
+     * - html
      */
     'output_format' => 'pdf',
     'exclude_tables' => ['migrations', 'jobs', 'failed_jobs'],
