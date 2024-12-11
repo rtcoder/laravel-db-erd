@@ -31,6 +31,12 @@ If you need to customize the behavior, publish the configuration file:
 ```bash
 php artisan vendor:publish --tag=db-erd-config
 ```
+If you need to customize the views, you can publish them using:
+
+```bash
+php artisan vendor:publish --tag=db-erd-views
+```
+This will copy the default views to your project's `resources/views/vendor/laravel-erd` directory, where you can modify them as needed.
 
 ### Step 3: Install Graphviz
 Ensure Graphviz is installed on your system.
