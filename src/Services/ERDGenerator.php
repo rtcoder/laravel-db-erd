@@ -3,6 +3,7 @@
 namespace Rtcoder\LaravelERD\Services;
 
 use Exception;
+use Illuminate\Support\Facades\File;
 use InvalidArgumentException;
 use Rtcoder\LaravelERD\Services\TableRelation\Exception\InvalidConnectionNameException;
 use Rtcoder\LaravelERD\Services\TableRelation\TableRelationResolver;
@@ -113,6 +114,12 @@ class ERDGenerator
         }
     }
 
+    /**
+     * @param array $tables
+     * @param string $outputFile
+     * @return void
+     * @throws Exception
+     */
     protected function renderGraphHtml(array $tables, string $outputFile): void
     {
         $directory = dirname($outputFile);
@@ -137,8 +144,16 @@ class ERDGenerator
             'links' => $links,
         ];
 
-        // Renderowanie widoku Blade jako string
-        $htmlContent = view('erd-diagram', compact('diagramData'))->render();
+        $projectViewPath = resource_path('views/vendor/laravel-erd/erd-diagram.blade.php');
+        $packageViewPath = __DIR__ . '/../resources/views/erd-diagram.blade.php';
+
+        if (File::exists($projectViewPath)) {
+            $htmlContent = view('vendor.laravel-erd.erd-diagram', compact('diagramData'))->render();
+        } elseif (File::exists($packageViewPath)) {
+            $htmlContent = view()->file($packageViewPath, compact('diagramData'))->render();
+        } else {
+            throw new Exception("View file not found in either project or package.");
+        }
 
         // Zapisanie pliku HTML
         file_put_contents($outputFile, $htmlContent);

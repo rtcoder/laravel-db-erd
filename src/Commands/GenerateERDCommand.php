@@ -13,7 +13,7 @@ class GenerateERDCommand extends Command
      *
      * @var string
      */
-    protected $signature = 'db:erd 
+    protected $signature = 'erd:generate 
                             {--output= : The file path where the ERD will be saved (default: storage/erd/erd_diagram.<format>)} 
                             {--driver= : The database driver to use (default: from config file)} 
                             {--format= : The output format for the ERD (e.g., pdf, png, svg)}';
