@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Rtcoder\LaravelERD\Providers;
 
 use Illuminate\Support\ServiceProvider;
@@ -8,18 +10,19 @@ use Rtcoder\LaravelERD\Services\ERDGenerator;
 
 class ERDServiceProvider extends ServiceProvider
 {
-    /**
-     * Bootstrap any application services.
-     *
-     * @return void
-     */
     public function boot(): void
     {
         $this->loadViewsFrom(__DIR__ . '/../resources/views', 'laravel-erd');
         $this->publishes([
             __DIR__ . '/../resources/views' => resource_path('views/vendor/laravel-erd'),
+        ], 'db-erd-views');
+        $this->publishes([
+            __DIR__ . '/../resources/views' => resource_path('views/vendor/laravel-erd'),
         ], 'views');
 
+        $this->publishes([
+            __DIR__ . '/../config/erd.php' => config_path('erd.php'),
+        ], 'db-erd-config');
         $this->publishes([
             __DIR__ . '/../config/erd.php' => config_path('erd.php'),
         ], 'config');
@@ -29,11 +32,6 @@ class ERDServiceProvider extends ServiceProvider
         }
     }
 
-    /**
-     * Register any application services.
-     *
-     * @return void
-     */
     public function register(): void
     {
         $this->mergeConfigFrom(
@@ -41,7 +39,7 @@ class ERDServiceProvider extends ServiceProvider
             'erd'
         );
 
-        $this->app->singleton('erd-generator', function ($app) {
+        $this->app->singleton('erd-generator', function (): ERDGenerator {
             return new ERDGenerator();
         });
     }

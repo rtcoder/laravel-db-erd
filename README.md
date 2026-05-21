@@ -17,7 +17,7 @@ A Laravel package for generating Entity-Relationship Diagrams (ERD) of your data
 
 ### Requirements
 - PHP 8.1 or higher
-- Laravel 9.x or higher
+- Laravel 10.x or higher
 - [Graphviz](https://graphviz.org/) installed on your system
 
 ### Step 1: Install the package
@@ -77,10 +77,10 @@ The `--output` option specifies the file path for the generated diagram.
 * HTML
 
 ## Configuration
-You can customize the package by modifying the configuration file (`config/db-erd.php`):
+You can customize the package by modifying the configuration file (`config/erd.php`):
 ```php
 return [
-    'default_driver' => env('DB_ERD_DRIVER', 'mysql'),
+    'default_driver' => env('DB_ERD_DRIVER', env('DB_CONNECTION', 'pgsql')),
     'output_directory' => storage_path('erd'),
     'output_name' => 'erd_diagram',
     'output_format' => 'pdf',
@@ -91,10 +91,33 @@ return [
 ---
 
 ## Troubleshooting
-1. `Graphviz not found` Error\
-Ensure Graphviz is correctly installed and added to your system's PATH.
+### `Graphviz not found` error
+Ensure Graphviz is correctly installed and the `dot` binary is available in your system's PATH.
 
-2. Empty ERD Diagram\
+#### macOS
+```bash
+brew install graphviz
+```
+
+#### Ubuntu / Debian
+```bash
+sudo apt install graphviz
+```
+
+#### Windows
+Install Graphviz from the [official download page](https://graphviz.org/download/), or use one of the package manager commands below:
+
+```powershell
+winget install graphviz
+```
+
+```powershell
+choco install graphviz
+```
+
+If the command still cannot find `dot`, restart your terminal and verify that the Graphviz `bin` directory is included in PATH.
+
+### Empty ERD Diagram
 Verify that your database schema has relationships (foreign keys).
 
 ---

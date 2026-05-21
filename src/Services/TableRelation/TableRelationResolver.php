@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Rtcoder\LaravelERD\Services\TableRelation;
 
 use Rtcoder\LaravelERD\Services\TableRelation\Exception\InvalidConnectionNameException;
@@ -7,11 +9,11 @@ use Rtcoder\LaravelERD\Services\TableRelation\Interface\TableRelationInterface;
 
 class TableRelationResolver
 {
-    private string $db_connection;
+    private ?string $dbConnection = null;
 
     public function setConnection(string $connection): void
     {
-        $this->db_connection = $connection;
+        $this->dbConnection = strtolower($connection);
     }
 
     /**
@@ -20,13 +22,15 @@ class TableRelationResolver
      */
     public function resolve(): TableRelationInterface
     {
-        return match ($this->db_connection) {
-            'psql' => new PostgresTableRelation(),
+        return match ($this->dbConnection) {
+            'pgsql', 'postgres', 'postgresql', 'psql' => new PostgresTableRelation(),
             'mysql' => new MysqlTableRelation(),
             'sqlite' => new SqliteTableRelation(),
             'sqlsrv' => new SqlServerTableRelation(),
             'oracle' => new OracleTableRelation(),
-            default => throw new InvalidConnectionNameException()
+            default => throw new InvalidConnectionNameException(
+                sprintf('Unsupported database driver [%s].', $this->dbConnection ?? 'none')
+            ),
         };
     }
 }

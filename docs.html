@@ -1,0 +1,513 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Documentation - Laravel DB ERD Generator</title>
+  <meta name="description" content="Local documentation for installing and using Laravel DB ERD Generator.">
+  <style>
+    :root {
+      color-scheme: light;
+      --ink: #18202f;
+      --muted: #667085;
+      --line: #d9dee8;
+      --paper: #ffffff;
+      --soft: #f4f7fb;
+      --green: #1f7a5c;
+      --blue: #285eaf;
+      --rose: #b9385f;
+      --amber: #aa6a16;
+      --code: #111827;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html {
+      scroll-behavior: smooth;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background: var(--soft);
+      color: var(--ink);
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      letter-spacing: 0;
+    }
+
+    a {
+      color: inherit;
+      text-decoration: none;
+    }
+
+    code,
+    pre {
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    }
+
+    .shell {
+      width: min(1120px, calc(100% - 32px));
+      margin: 0 auto;
+    }
+
+    .nav {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 24px;
+      padding: 24px 0;
+    }
+
+    .brand {
+      display: inline-flex;
+      align-items: center;
+      gap: 12px;
+      font-weight: 800;
+    }
+
+    .mark {
+      display: grid;
+      width: 38px;
+      height: 38px;
+      place-items: center;
+      border-radius: 8px;
+      background: var(--ink);
+      color: #fff;
+      font-weight: 900;
+    }
+
+    .nav-actions {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .button {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 42px;
+      padding: 0 16px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: var(--paper);
+      color: var(--ink);
+      font-weight: 700;
+      box-shadow: 0 1px 0 rgba(24, 32, 47, 0.04);
+      white-space: nowrap;
+    }
+
+    .button.primary {
+      border-color: var(--ink);
+      background: var(--ink);
+      color: #fff;
+    }
+
+    .docs-hero {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) minmax(280px, 380px);
+      gap: 42px;
+      align-items: end;
+      padding: 42px 0 52px;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .eyebrow {
+      margin: 0 0 14px;
+      color: var(--green);
+      font-size: 0.78rem;
+      font-weight: 900;
+      letter-spacing: 0;
+      text-transform: uppercase;
+    }
+
+    h1 {
+      margin: 0;
+      max-width: 760px;
+      font-size: clamp(2.4rem, 5vw, 4.8rem);
+      line-height: 0.98;
+      letter-spacing: 0;
+    }
+
+    .lead {
+      max-width: 720px;
+      margin: 22px 0 0;
+      color: var(--muted);
+      font-size: 1.08rem;
+      line-height: 1.7;
+    }
+
+    .quick-card {
+      padding: 22px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: var(--paper);
+      box-shadow: 0 12px 32px rgba(24, 32, 47, 0.08);
+    }
+
+    .quick-card h2 {
+      margin: 0 0 14px;
+      font-size: 1rem;
+    }
+
+    .quick-card a {
+      display: block;
+      padding: 10px 0;
+      border-top: 1px solid var(--line);
+      color: var(--muted);
+      font-weight: 700;
+    }
+
+    .quick-card a:first-of-type {
+      border-top: 0;
+    }
+
+    .docs-layout {
+      display: grid;
+      grid-template-columns: 240px minmax(0, 1fr);
+      gap: 40px;
+      align-items: start;
+      padding: 46px 0 80px;
+    }
+
+    .toc {
+      position: sticky;
+      top: 18px;
+      padding: 18px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: rgba(255, 255, 255, 0.78);
+    }
+
+    .toc strong {
+      display: block;
+      margin-bottom: 12px;
+      font-size: 0.86rem;
+      text-transform: uppercase;
+    }
+
+    .toc a {
+      display: block;
+      padding: 8px 0;
+      color: var(--muted);
+      font-weight: 700;
+    }
+
+    .content {
+      display: grid;
+      gap: 24px;
+    }
+
+    .section {
+      padding: 30px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: var(--paper);
+      box-shadow: 0 8px 22px rgba(24, 32, 47, 0.05);
+    }
+
+    .section h2 {
+      margin: 0;
+      font-size: 1.45rem;
+      letter-spacing: 0;
+    }
+
+    .section h3 {
+      margin: 26px 0 0;
+      font-size: 1rem;
+    }
+
+    .section p {
+      margin: 14px 0 0;
+      color: var(--muted);
+      line-height: 1.7;
+    }
+
+    .section ul,
+    .section ol {
+      margin: 16px 0 0;
+      padding-left: 22px;
+      color: var(--muted);
+      line-height: 1.8;
+    }
+
+    .section li + li {
+      margin-top: 4px;
+    }
+
+    .section code:not(pre code) {
+      padding: 2px 6px;
+      border-radius: 6px;
+      background: #eef2f7;
+      color: var(--code);
+      font-size: 0.9em;
+    }
+
+    pre {
+      margin: 16px 0 0;
+      overflow-x: auto;
+      border-radius: 8px;
+      background: var(--code);
+      color: #e5edf7;
+      font-size: 0.9rem;
+      line-height: 1.65;
+    }
+
+    pre code {
+      display: block;
+      min-width: max-content;
+      padding: 18px;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 14px;
+      margin-top: 18px;
+    }
+
+    .mini {
+      padding: 16px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: #fbfcfe;
+    }
+
+    .mini strong {
+      display: block;
+      margin-bottom: 6px;
+    }
+
+    .mini span {
+      color: var(--muted);
+      line-height: 1.5;
+    }
+
+    .callout {
+      margin-top: 18px;
+      padding: 16px;
+      border-left: 4px solid var(--amber);
+      border-radius: 8px;
+      background: #fff8ed;
+      color: #60400f;
+      line-height: 1.6;
+    }
+
+    footer {
+      padding: 0 0 38px;
+      color: var(--muted);
+      text-align: center;
+    }
+
+    @media (max-width: 860px) {
+      .docs-hero,
+      .docs-layout {
+        grid-template-columns: 1fr;
+      }
+
+      .toc {
+        position: static;
+      }
+
+      .toc nav {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        column-gap: 18px;
+      }
+    }
+
+    @media (max-width: 620px) {
+      .shell {
+        width: min(100% - 24px, 1120px);
+      }
+
+      .nav {
+        align-items: flex-start;
+        flex-direction: column;
+      }
+
+      .nav-actions {
+        width: 100%;
+      }
+
+      .button {
+        flex: 1 1 auto;
+      }
+
+      .docs-hero {
+        padding-top: 24px;
+      }
+
+      .section {
+        padding: 22px;
+      }
+
+      .grid,
+      .toc nav {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main class="shell">
+    <nav class="nav" aria-label="Primary">
+      <a class="brand" href="index.html">
+        <span class="mark">ERD</span>
+        <span>Laravel DB ERD</span>
+      </a>
+      <div class="nav-actions">
+        <a class="button" href="index.html">Home</a>
+        <a class="button primary" href="https://packagist.org/packages/rtcoder/laravel-db-erd">Packagist</a>
+      </div>
+    </nav>
+
+    <section class="docs-hero">
+      <div>
+        <p class="eyebrow">Local documentation</p>
+        <h1>Install, configure, and generate ERD diagrams.</h1>
+        <p class="lead">
+          This page mirrors the package README in a browsable local format, with the essentials grouped for quick setup inside a Laravel project.
+        </p>
+      </div>
+
+      <aside class="quick-card" aria-label="Quick links">
+        <h2>Quick start</h2>
+        <a href="#installation">Installation</a>
+        <a href="#usage">Usage</a>
+        <a href="#configuration">Configuration</a>
+        <a href="#troubleshooting">Troubleshooting</a>
+      </aside>
+    </section>
+
+    <div class="docs-layout">
+      <aside class="toc" aria-label="Documentation navigation">
+        <strong>On this page</strong>
+        <nav>
+          <a href="#features">Features</a>
+          <a href="#installation">Installation</a>
+          <a href="#usage">Usage</a>
+          <a href="#drivers">Drivers</a>
+          <a href="#configuration">Configuration</a>
+          <a href="#troubleshooting">Troubleshooting</a>
+        </nav>
+      </aside>
+
+      <div class="content">
+        <section class="section" id="features">
+          <h2>Features</h2>
+          <div class="grid">
+            <div class="mini">
+              <strong>Schema scanning</strong>
+              <span>Reads tables and foreign key relationships from the configured database connection.</span>
+            </div>
+            <div class="mini">
+              <strong>Graphviz exports</strong>
+              <span>Generates PDF, PNG, and SVG diagrams using the local Graphviz <code>dot</code> command.</span>
+            </div>
+            <div class="mini">
+              <strong>Interactive HTML</strong>
+              <span>Can render a browser-friendly diagram view through the package Blade template.</span>
+            </div>
+            <div class="mini">
+              <strong>Laravel integration</strong>
+              <span>Provides package auto-discovery, publishable config and views, plus an Artisan command.</span>
+            </div>
+          </div>
+        </section>
+
+        <section class="section" id="installation">
+          <h2>Installation</h2>
+          <h3>Requirements</h3>
+          <ul>
+            <li>PHP 8.1 or higher</li>
+            <li>Laravel 10.x or higher</li>
+            <li>Graphviz installed locally for PDF, PNG, and SVG exports</li>
+          </ul>
+
+          <h3>Install the package</h3>
+          <pre><code>composer require rtcoder/laravel-db-erd</code></pre>
+
+          <h3>Publish configuration</h3>
+          <pre><code>php artisan vendor:publish --tag=db-erd-config</code></pre>
+
+          <h3>Publish views</h3>
+          <pre><code>php artisan vendor:publish --tag=db-erd-views</code></pre>
+
+          <div class="callout">
+            Published views are copied to <code>resources/views/vendor/laravel-erd</code>, so you can customize the generated HTML diagram without editing vendor files.
+          </div>
+        </section>
+
+        <section class="section" id="usage">
+          <h2>Usage</h2>
+          <p>Generate a diagram with the <code>erd:generate</code> Artisan command. The output extension controls the renderer.</p>
+          <pre><code>php artisan erd:generate --output=storage/erd/erd_diagram.pdf --driver=mysql</code></pre>
+
+          <h3>HTML output</h3>
+          <pre><code>php artisan erd:generate --output=storage/erd/erd_diagram.html --driver=pgsql</code></pre>
+
+          <h3>Config defaults</h3>
+          <p>When <code>--output</code>, <code>--driver</code>, or <code>--format</code> are omitted, the command reads defaults from <code>config/erd.php</code>.</p>
+        </section>
+
+        <section class="section" id="drivers">
+          <h2>Supported Drivers And Formats</h2>
+          <div class="grid">
+            <div class="mini">
+              <strong>Databases</strong>
+              <span>MySQL, PostgreSQL, SQLite, SQL Server, and Oracle.</span>
+            </div>
+            <div class="mini">
+              <strong>Formats</strong>
+              <span>PDF, SVG, PNG, and HTML.</span>
+            </div>
+          </div>
+        </section>
+
+        <section class="section" id="configuration">
+          <h2>Configuration</h2>
+          <p>After publishing the config, customize <code>config/erd.php</code> for your application.</p>
+          <pre><code>&lt;?php
+
+return [
+    'default_driver' =&gt; env('DB_ERD_DRIVER', env('DB_CONNECTION', 'pgsql')),
+    'output_directory' =&gt; storage_path('erd'),
+    'output_name' =&gt; 'erd_diagram',
+    'output_format' =&gt; 'pdf',
+    'exclude_tables' =&gt; ['migrations', 'jobs', 'failed_jobs'],
+];</code></pre>
+        </section>
+
+        <section class="section" id="troubleshooting">
+          <h2>Troubleshooting</h2>
+          <h3>Graphviz not found</h3>
+          <p>Install Graphviz for your operating system and make sure the <code>dot</code> binary is available in your system path.</p>
+
+          <h3>macOS</h3>
+          <pre><code>brew install graphviz</code></pre>
+
+          <h3>Ubuntu / Debian</h3>
+          <pre><code>sudo apt install graphviz</code></pre>
+
+          <h3>Windows</h3>
+          <p>Use the <a href="https://graphviz.org/download/">official Graphviz installer</a>, Windows Package Manager, or Chocolatey.</p>
+          <pre><code>winget install graphviz</code></pre>
+          <pre><code>choco install graphviz</code></pre>
+          <p>After installation, restart your terminal and confirm that the Graphviz <code>bin</code> directory is available in PATH.</p>
+
+          <h3>Empty diagram</h3>
+          <p>Check that the selected database has tables with foreign keys and that the command uses the expected driver.</p>
+          <pre><code>php artisan erd:generate --format=html --driver=mysql</code></pre>
+        </section>
+      </div>
+    </div>
+  </main>
+
+  <footer class="shell">
+    Laravel DB ERD Generator is released under the MIT license.
+  </footer>
+</body>
+</html>
