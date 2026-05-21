@@ -4,7 +4,7 @@
   "type": "library",
   "license": "MIT",
   "prefer-stable": true,
-  "version": "0.1.20",
+  "version": "0.2.0",
   "require": {
     "php": "^8.1",
     "laravel/framework": "^10.48.29|^11.44.1|^12.1.1"

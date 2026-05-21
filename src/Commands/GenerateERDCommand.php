@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Rtcoder\LaravelERD\Commands;
 
 use Illuminate\Console\Command;
-use Rtcoder\LaravelERD\Services\ERDGenerator;
+use Rtcoder\LaravelERD\Contracts\ERDGeneratorInterface;
 use Symfony\Component\Console\Command\Command as CommandAlias;
 use Throwable;
 
@@ -24,6 +24,12 @@ class GenerateERDCommand extends Command
      */
     protected $description = 'Generate an Entity-Relationship Diagram (ERD) of the database schema';
 
+    public function __construct(
+        private readonly ERDGeneratorInterface $generator,
+    ) {
+        parent::__construct();
+    }
+
     public function handle(): int
     {
         $format = (string) ($this->option('format') ?? config('erd.output_format', 'pdf'));
@@ -37,8 +43,7 @@ class GenerateERDCommand extends Command
         $this->info("Saving ERD to: {$outputPath}");
 
         try {
-            $generator = new ERDGenerator();
-            $generator->generate($outputPath, $driver);
+            $this->generator->generate($outputPath, $driver);
 
             $this->info('ERD successfully generated!');
             return CommandAlias::SUCCESS;

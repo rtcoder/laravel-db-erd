@@ -405,6 +405,7 @@
         <h2>Quick start</h2>
         <a href="#installation">Installation</a>
         <a href="#usage">Usage</a>
+        <a href="#service-usage">Service API</a>
         <a href="#configuration">Configuration</a>
         <a href="#exceptions">Exceptions</a>
         <a href="#troubleshooting">Troubleshooting</a>
@@ -418,6 +419,7 @@
           <a href="#features">Features</a>
           <a href="#installation">Installation</a>
           <a href="#usage">Usage</a>
+          <a href="#service-usage">Service API</a>
           <a href="#drivers">Drivers</a>
           <a href="#configuration">Configuration</a>
           <a href="#exceptions">Exceptions</a>
@@ -483,8 +485,72 @@
           <pre><code>php artisan erd:doctor</code></pre>
           <p>The command verifies that the Graphviz <code>dot</code> binary is available in PATH and prints its detected path and version.</p>
 
+          <h3>Generate from code</h3>
+          <pre><code>use Rtcoder\LaravelERD\Contracts\ERDGeneratorInterface;
+
+class ExportSchemaController
+{
+    public function __invoke(ERDGeneratorInterface $generator): void
+    {
+        $generator-&gt;generate(storage_path('erd/schema.svg'), 'pgsql');
+    }
+}</code></pre>
+
+          <h3>Resolve from container</h3>
+          <pre><code>app(ERDGeneratorInterface::class)-&gt;generate(storage_path('erd/schema.html'), 'mysql');
+app('erd-generator')-&gt;generate(storage_path('erd/schema.pdf'), 'pgsql');</code></pre>
+
           <h3>Config defaults</h3>
           <p>When <code>--output</code>, <code>--driver</code>, or <code>--format</code> are omitted, the command reads defaults from <code>config/erd.php</code>.</p>
+        </section>
+
+        <section class="section" id="service-usage">
+          <h2>Service API</h2>
+          <p>The package registers the generator in Laravel's service container, so diagrams can be generated from controllers, jobs, scheduled tasks, tests, or custom commands.</p>
+          <div class="grid">
+            <div class="mini">
+              <strong>ERDGeneratorInterface</strong>
+              <span>Recommended dependency injection target.</span>
+            </div>
+            <div class="mini">
+              <strong>ERDGenerator</strong>
+              <span>Concrete generator implementation.</span>
+            </div>
+            <div class="mini">
+              <strong>erd-generator</strong>
+              <span>String alias for quick container resolution.</span>
+            </div>
+          </div>
+
+          <h3>Controller example</h3>
+          <pre><code>namespace App\Http\Controllers;
+
+use Rtcoder\LaravelERD\Contracts\ERDGeneratorInterface;
+
+class ExportSchemaController
+{
+    public function __invoke(ERDGeneratorInterface $generator): string
+    {
+        $path = storage_path('erd/schema.svg');
+
+        $generator-&gt;generate($path, 'pgsql');
+
+        return $path;
+    }
+}</code></pre>
+
+          <h3>Queued job example</h3>
+          <pre><code>namespace App\Jobs;
+
+use Rtcoder\LaravelERD\Contracts\ERDGeneratorInterface;
+
+class GenerateSchemaDiagram
+{
+    public function handle(ERDGeneratorInterface $generator): void
+    {
+        $generator-&gt;generate(storage_path('erd/schema.html'), config('erd.default_driver'));
+    }
+}</code></pre>
         </section>
 
         <section class="section" id="drivers">
@@ -558,10 +624,10 @@ return [
           <pre><code>use Rtcoder\LaravelERD\Exceptions\ERDException;
 use Rtcoder\LaravelERD\Exceptions\InvalidConnectionNameException;
 use Rtcoder\LaravelERD\Exceptions\UnsupportedOutputFormatException;
-use Rtcoder\LaravelERD\Services\ERDGenerator;
+use Rtcoder\LaravelERD\Contracts\ERDGeneratorInterface;
 
 try {
-    app(ERDGenerator::class)-&gt;generate(storage_path('erd/schema.svg'), 'pgsql');
+    app(ERDGeneratorInterface::class)-&gt;generate(storage_path('erd/schema.svg'), 'pgsql');
 } catch (UnsupportedOutputFormatException|InvalidConnectionNameException $exception) {
     report($exception);
 } catch (ERDException $exception) {

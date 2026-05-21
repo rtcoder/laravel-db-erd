@@ -7,6 +7,7 @@ namespace Rtcoder\LaravelERD\Providers;
 use Illuminate\Support\ServiceProvider;
 use Rtcoder\LaravelERD\Commands\DoctorERDCommand;
 use Rtcoder\LaravelERD\Commands\GenerateERDCommand;
+use Rtcoder\LaravelERD\Contracts\ERDGeneratorInterface;
 use Rtcoder\LaravelERD\Services\ERDGenerator;
 
 class ERDServiceProvider extends ServiceProvider
@@ -43,8 +44,11 @@ class ERDServiceProvider extends ServiceProvider
             'erd'
         );
 
-        $this->app->singleton('erd-generator', function (): ERDGenerator {
+        $this->app->singleton(ERDGenerator::class, function (): ERDGenerator {
             return new ERDGenerator();
         });
+
+        $this->app->alias(ERDGenerator::class, ERDGeneratorInterface::class);
+        $this->app->alias(ERDGenerator::class, 'erd-generator');
     }
 }

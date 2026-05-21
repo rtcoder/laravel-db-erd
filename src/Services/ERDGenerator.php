@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Rtcoder\LaravelERD\Services;
 
 use Illuminate\Support\Facades\File;
+use Rtcoder\LaravelERD\Contracts\ERDGeneratorInterface;
 use Rtcoder\LaravelERD\Enums\OutputFormat;
 use Rtcoder\LaravelERD\Exceptions\DirectoryCreationException;
 use Rtcoder\LaravelERD\Exceptions\FileWriteException;
@@ -16,7 +17,7 @@ use Rtcoder\LaravelERD\Exceptions\ViewNotFoundException;
 use Rtcoder\LaravelERD\Services\TableRelation\TableRelationResolver;
 use Throwable;
 
-class ERDGenerator
+class ERDGenerator implements ERDGeneratorInterface
 {
     public function __construct(
         private readonly ?TableRelationResolver $relationResolver = null,

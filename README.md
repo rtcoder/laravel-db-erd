@@ -69,6 +69,70 @@ php artisan erd:doctor
 ```
 The command verifies that the Graphviz `dot` binary is available in PATH and prints its detected path and version.
 
+**Generate from your application code**
+```php
+use Rtcoder\LaravelERD\Contracts\ERDGeneratorInterface;
+
+class ExportSchemaController
+{
+    public function __invoke(ERDGeneratorInterface $generator): void
+    {
+        $generator->generate(storage_path('erd/schema.svg'), 'pgsql');
+    }
+}
+```
+
+You can also resolve the service from the container:
+```php
+app(ERDGeneratorInterface::class)->generate(storage_path('erd/schema.html'), 'mysql');
+app('erd-generator')->generate(storage_path('erd/schema.pdf'), 'pgsql');
+```
+
+## Service usage
+The package registers the generator in Laravel's service container, so you can generate diagrams from controllers, jobs, commands, scheduled tasks, tests, or any other application service.
+
+Available bindings:
+
+| Binding | Description |
+| --- | --- |
+| `Rtcoder\LaravelERD\Contracts\ERDGeneratorInterface` | Recommended dependency injection target. |
+| `Rtcoder\LaravelERD\Services\ERDGenerator` | Concrete generator implementation. |
+| `erd-generator` | String alias for quick container resolution. |
+
+Controller example:
+```php
+namespace App\Http\Controllers;
+
+use Rtcoder\LaravelERD\Contracts\ERDGeneratorInterface;
+
+class ExportSchemaController
+{
+    public function __invoke(ERDGeneratorInterface $generator): string
+    {
+        $path = storage_path('erd/schema.svg');
+
+        $generator->generate($path, 'pgsql');
+
+        return $path;
+    }
+}
+```
+
+Queued job example:
+```php
+namespace App\Jobs;
+
+use Rtcoder\LaravelERD\Contracts\ERDGeneratorInterface;
+
+class GenerateSchemaDiagram
+{
+    public function handle(ERDGeneratorInterface $generator): void
+    {
+        $generator->generate(storage_path('erd/schema.html'), config('erd.default_driver'));
+    }
+}
+```
+
 **Supported Databases**
 * MySQL
 * PostgreSQL
@@ -118,10 +182,10 @@ Example:
 use Rtcoder\LaravelERD\Exceptions\ERDException;
 use Rtcoder\LaravelERD\Exceptions\InvalidConnectionNameException;
 use Rtcoder\LaravelERD\Exceptions\UnsupportedOutputFormatException;
-use Rtcoder\LaravelERD\Services\ERDGenerator;
+use Rtcoder\LaravelERD\Contracts\ERDGeneratorInterface;
 
 try {
-    app(ERDGenerator::class)->generate(storage_path('erd/schema.svg'), 'pgsql');
+    app(ERDGeneratorInterface::class)->generate(storage_path('erd/schema.svg'), 'pgsql');
 } catch (UnsupportedOutputFormatException|InvalidConnectionNameException $exception) {
     report($exception);
 } catch (ERDException $exception) {
