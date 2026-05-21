@@ -63,6 +63,12 @@ php artisan erd:generate --output=storage/erd/erd_diagram.pdf --driver=mysql
 ```
 The `--output` option specifies the file path for the generated diagram.
 
+**Check Graphviz availability**
+```bash
+php artisan erd:doctor
+```
+The command verifies that the Graphviz `dot` binary is available in PATH and prints its detected path and version.
+
 **Supported Databases**
 * MySQL
 * PostgreSQL
@@ -128,6 +134,11 @@ try {
 ## Troubleshooting
 ### `Graphviz not found` error
 Ensure Graphviz is correctly installed and the `dot` binary is available in your system's PATH.
+
+You can check this from Laravel with:
+```bash
+php artisan erd:doctor
+```
 
 #### macOS
 ```bash

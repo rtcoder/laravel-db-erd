@@ -451,6 +451,10 @@
           <h3>HTML output</h3>
           <pre><code>php artisan erd:generate --output=storage/erd/erd_diagram.html --driver=pgsql</code></pre>
 
+          <h3>Check Graphviz</h3>
+          <pre><code>php artisan erd:doctor</code></pre>
+          <p>The command verifies that the Graphviz <code>dot</code> binary is available in PATH and prints its detected path and version.</p>
+
           <h3>Config defaults</h3>
           <p>When <code>--output</code>, <code>--driver</code>, or <code>--format</code> are omitted, the command reads defaults from <code>config/erd.php</code>.</p>
         </section>
@@ -541,6 +545,7 @@ try {
           <h2>Troubleshooting</h2>
           <h3>Graphviz not found</h3>
           <p>Install Graphviz for your operating system and make sure the <code>dot</code> binary is available in your system path.</p>
+          <pre><code>php artisan erd:doctor</code></pre>
 
           <h3>macOS</h3>
           <pre><code>brew install graphviz</code></pre>

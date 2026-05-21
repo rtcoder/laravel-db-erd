@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Rtcoder\LaravelERD\Providers;
 
 use Illuminate\Support\ServiceProvider;
+use Rtcoder\LaravelERD\Commands\DoctorERDCommand;
 use Rtcoder\LaravelERD\Commands\GenerateERDCommand;
 use Rtcoder\LaravelERD\Services\ERDGenerator;
 
@@ -28,7 +29,10 @@ class ERDServiceProvider extends ServiceProvider
         ], 'config');
 
         if ($this->app->runningInConsole()) {
-            $this->commands([GenerateERDCommand::class]);
+            $this->commands([
+                DoctorERDCommand::class,
+                GenerateERDCommand::class,
+            ]);
         }
     }
 
