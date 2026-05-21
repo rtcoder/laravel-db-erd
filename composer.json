@@ -3,12 +3,14 @@
   "description": "Laravel package to generate database ERD diagrams.",
   "type": "library",
   "license": "MIT",
-  "minimum-stability": "dev",
   "prefer-stable": true,
-  "version": "0.1.10",
+  "version": "0.2.0",
   "require": {
-    "php": "^8.0",
-    "laravel/framework": "^9.0"
+    "php": "^8.1",
+    "laravel/framework": "^10.48.29|^11.44.1|^12.1.1"
+  },
+  "scripts": {
+    "test": "phpunit --testdox"
   },
   "autoload": {
     "psr-4": {

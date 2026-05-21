@@ -1,17 +1,22 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Rtcoder\LaravelERD\Services\TableRelation;
 
-use Rtcoder\LaravelERD\Services\TableRelation\Exception\InvalidConnectionNameException;
+use Rtcoder\LaravelERD\Enums\DatabaseConnection;
+use Rtcoder\LaravelERD\Exceptions\InvalidConnectionNameException;
 use Rtcoder\LaravelERD\Services\TableRelation\Interface\TableRelationInterface;
 
 class TableRelationResolver
 {
-    private string $db_connection;
+    private ?DatabaseConnection $dbConnection = null;
+    private ?string $connectionName = null;
 
     public function setConnection(string $connection): void
     {
-        $this->db_connection = $connection;
+        $this->connectionName = strtolower($connection);
+        $this->dbConnection = DatabaseConnection::fromConnectionName($connection);
     }
 
     /**
@@ -20,13 +25,13 @@ class TableRelationResolver
      */
     public function resolve(): TableRelationInterface
     {
-        return match ($this->db_connection) {
-            'psql' => new PostgresTableRelation(),
-            'mysql' => new MysqlTableRelation(),
-            'sqlite' => new SqliteTableRelation(),
-            'sqlsrv' => new SqlServerTableRelation(),
-            'oracle' => new OracleTableRelation(),
-            default => throw new InvalidConnectionNameException()
+        return match ($this->dbConnection) {
+            DatabaseConnection::Pgsql => new PostgresTableRelation(),
+            DatabaseConnection::Mysql => new MysqlTableRelation(),
+            DatabaseConnection::Sqlite => new SqliteTableRelation(),
+            DatabaseConnection::SqlServer => new SqlServerTableRelation(),
+            DatabaseConnection::Oracle => new OracleTableRelation(),
+            default => throw InvalidConnectionNameException::forConnection($this->connectionName),
         };
     }
 }

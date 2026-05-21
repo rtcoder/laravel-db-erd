@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Rtcoder\LaravelERD\Services\TableRelation;
 
 use Illuminate\Support\Facades\DB;
@@ -7,17 +9,15 @@ use Rtcoder\LaravelERD\Services\TableRelation\Interface\TableRelationInterface;
 
 class MysqlTableRelation implements TableRelationInterface
 {
-
     /**
-     * @return array
+     * @return array<int, array{name: string, relations: array<int, array{column: string, referenced_table: string, referenced_column: string}>}>
      */
     public function getTableRelations(): array
     {
         $tables = [];
 
-        $databaseName = DB::getDatabaseName(); // Pobierz nazwę bazy danych
+        $databaseName = DB::getDatabaseName();
 
-        // Pobierz wszystkie tabele w bieżącej bazie danych
         $rawTables = DB::select("
             SELECT table_name 
             FROM INFORMATION_SCHEMA.TABLES 
@@ -27,7 +27,6 @@ class MysqlTableRelation implements TableRelationInterface
         foreach ($rawTables as $table) {
             $tableName = $table->table_name;
 
-            // Pobierz klucze obce dla tabeli
             $foreignKeys = DB::select("
                 SELECT 
                     kcu.table_name AS source_table,
@@ -50,14 +49,14 @@ class MysqlTableRelation implements TableRelationInterface
             $relations = [];
             foreach ($foreignKeys as $fk) {
                 $relations[] = [
-                    'column' => $fk->source_column,
-                    'referenced_table' => $fk->target_table,
-                    'referenced_column' => $fk->target_column,
+                    'column' => (string) $fk->source_column,
+                    'referenced_table' => (string) $fk->target_table,
+                    'referenced_column' => (string) $fk->target_column,
                 ];
             }
 
             $tables[] = [
-                'name' => $tableName,
+                'name' => (string) $tableName,
                 'relations' => $relations,
             ];
         }

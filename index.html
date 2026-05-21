@@ -1,0 +1,589 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Laravel DB ERD Generator</title>
+  <meta name="description"
+        content="A Laravel package for generating database entity relationship diagrams from Artisan.">
+  <style>
+      :root {
+          color-scheme: light;
+          --ink: #18202f;
+          --muted: #667085;
+          --line: #d9dee8;
+          --paper: #ffffff;
+          --soft: #f4f7fb;
+          --green: #1f7a5c;
+          --blue: #285eaf;
+          --rose: #b9385f;
+          --amber: #aa6a16;
+          --shadow: 0 20px 60px rgba(24, 32, 47, 0.14);
+      }
+
+      * {
+          box-sizing: border-box;
+      }
+
+      body {
+          margin: 0;
+          min-height: 100vh;
+          background: var(--soft);
+          color: var(--ink);
+          font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+          letter-spacing: 0;
+      }
+
+      a {
+          color: inherit;
+          text-decoration: none;
+      }
+
+      .shell {
+          width: min(1120px, calc(100% - 32px));
+          margin: 0 auto;
+      }
+
+      .nav {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          gap: 24px;
+          padding: 24px 0;
+      }
+
+      .brand {
+          display: inline-flex;
+          align-items: center;
+          gap: 12px;
+          font-weight: 800;
+      }
+
+      .mark {
+          display: grid;
+          width: 38px;
+          height: 38px;
+          place-items: center;
+          border-radius: 8px;
+          background: var(--ink);
+          color: #fff;
+          font-weight: 900;
+      }
+
+      .nav-actions {
+          display: flex;
+          align-items: center;
+          gap: 10px;
+      }
+
+      .button {
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          min-height: 42px;
+          padding: 0 16px;
+          border: 1px solid var(--line);
+          border-radius: 8px;
+          background: var(--paper);
+          color: var(--ink);
+          font-weight: 700;
+          box-shadow: 0 1px 0 rgba(24, 32, 47, 0.04);
+          white-space: nowrap;
+      }
+
+      .button.primary {
+          border-color: var(--ink);
+          background: var(--ink);
+          color: #fff;
+      }
+
+      .hero {
+          display: grid;
+          grid-template-columns: minmax(0, 0.9fr) minmax(360px, 1.1fr);
+          align-items: center;
+          gap: 54px;
+          padding: 44px 0 72px;
+      }
+
+      .eyebrow {
+          margin: 0 0 16px;
+          color: var(--green);
+          font-size: 0.78rem;
+          font-weight: 900;
+          letter-spacing: 0;
+          text-transform: uppercase;
+      }
+
+      h1 {
+          margin: 0;
+          max-width: 740px;
+          font-size: clamp(2.7rem, 6vw, 5.8rem);
+          line-height: 0.94;
+          letter-spacing: 0;
+      }
+
+      .lead {
+          max-width: 640px;
+          margin: 24px 0 0;
+          color: var(--muted);
+          font-size: 1.12rem;
+          line-height: 1.7;
+      }
+
+      .hero-actions {
+          display: flex;
+          flex-wrap: wrap;
+          gap: 12px;
+          margin-top: 30px;
+      }
+
+      .stats {
+          display: grid;
+          grid-template-columns: repeat(3, minmax(0, 1fr));
+          gap: 12px;
+          margin-top: 38px;
+      }
+
+      .stat {
+          padding: 16px;
+          border: 1px solid var(--line);
+          border-radius: 8px;
+          background: rgba(255, 255, 255, 0.72);
+      }
+
+      .stat strong {
+          display: block;
+          font-size: 1.35rem;
+          line-height: 1;
+      }
+
+      .stat span {
+          display: block;
+          margin-top: 7px;
+          color: var(--muted);
+          font-size: 0.88rem;
+      }
+
+      .product-shot {
+          position: relative;
+          min-height: 560px;
+          border: 1px solid var(--line);
+          border-radius: 8px;
+          background: var(--paper);
+          box-shadow: var(--shadow);
+          overflow: hidden;
+      }
+
+      .toolbar {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          gap: 12px;
+          height: 58px;
+          padding: 0 18px;
+          border-bottom: 1px solid var(--line);
+          background: #fbfcfe;
+      }
+
+      .dots {
+          display: flex;
+          gap: 7px;
+      }
+
+      .dots span {
+          width: 10px;
+          height: 10px;
+          border-radius: 999px;
+          background: var(--line);
+      }
+
+      .toolbar code {
+          overflow: hidden;
+          color: var(--muted);
+          font-size: 0.84rem;
+          text-overflow: ellipsis;
+          white-space: nowrap;
+      }
+
+      .canvas {
+          position: relative;
+          --node-w: 158px;
+          --users-w: var(--node-w);
+          --orders-w: var(--node-w);
+          --items-w: var(--node-w);
+          --payments-w: var(--node-w);
+          --users-x: 46px;
+          --users-y: 58px;
+          --orders-x: 230px;
+          --orders-y: 204px;
+          --items-x: calc(100% - var(--items-w) - 55px);
+          --items-y: 45px;
+          --payments-x: calc(100% - var(--payments-w) - 84px);
+          --payments-y: 339px;
+          --users-link-y: calc(var(--users-y) + 57px);
+          --orders-link-y: calc(var(--orders-y) + 48px);
+          --items-link-y: calc(var(--items-y) + 96px);
+          --payments-link-y: calc(var(--payments-y) + 48px);
+          --left-bus-x: 18px;
+          --right-bus-x: calc(100% - 40px);
+          height: 502px;
+          background: linear-gradient(#eef2f7 1px, transparent 1px),
+          linear-gradient(90deg, #eef2f7 1px, transparent 1px);
+          background-size: 32px 32px;
+      }
+
+      .node {
+          position: absolute;
+          width: var(--node-w);
+          border: 1px solid var(--line);
+          border-radius: 8px;
+          background: #fff;
+          box-shadow: 0 12px 26px rgba(24, 32, 47, 0.1);
+          overflow: hidden;
+      }
+
+      .node header {
+          padding: 11px 13px;
+          color: #fff;
+          font-weight: 900;
+      }
+
+      .node ul {
+          margin: 0;
+          padding: 0;
+          list-style: none;
+          color: var(--muted);
+          font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+          font-size: 0.78rem;
+          line-height: 1.8;
+      }
+
+      .node ul li {
+          padding: 3px 13px;
+      }
+
+      .node ul li:not(:last-child) {
+          border-bottom: 1px solid var(--line);
+      }
+
+      .node.users {
+          top: var(--users-y);
+          left: var(--users-x);
+          width: var(--users-w);
+      }
+
+      .node.orders {
+          top: var(--orders-y);
+          left: var(--orders-x);
+          width: var(--orders-w);
+      }
+
+      .node.items {
+          top: var(--items-y);
+          left: var(--items-x);
+          width: var(--items-w);
+      }
+
+      .node.payments {
+          top: var(--payments-y);
+          left: var(--payments-x);
+          width: var(--payments-w);
+      }
+
+      .users header {
+          background: var(--blue);
+      }
+
+      .orders header {
+          background: var(--green);
+      }
+
+      .items header {
+          background: var(--amber);
+      }
+
+      .payments header {
+          background: var(--rose);
+      }
+
+      .connector {
+          position: absolute;
+          background: var(--ink);
+          opacity: 0.34;
+      }
+
+      .connector.a {
+          left: var(--left-bus-x);
+          top: var(--users-link-y);
+          width: calc(var(--users-x) - var(--left-bus-x));
+          height: 2px;
+      }
+
+      .connector.b {
+          left: var(--left-bus-x);
+          top: var(--users-link-y);
+          width: 2px;
+          height: calc(var(--orders-link-y) - var(--users-link-y));
+      }
+
+      .connector.c {
+          left: var(--left-bus-x);
+          top: var(--orders-link-y);
+          width: calc(var(--orders-x) - var(--left-bus-x));
+          height: 2px;
+      }
+
+      .connector.d {
+          left: calc(var(--orders-x) + var(--orders-w));
+          top: var(--orders-link-y);
+          width: calc(var(--right-bus-x) - var(--orders-x) - var(--orders-w));
+          height: 2px;
+      }
+
+      .connector.e {
+          left: var(--right-bus-x);
+          top: var(--items-link-y);
+          width: 2px;
+          height: calc(var(--payments-link-y) - var(--items-link-y));
+      }
+
+      .connector.f {
+          left: calc(var(--payments-x) + var(--payments-w));
+          top: var(--payments-link-y);
+          width: calc(var(--right-bus-x) - var(--payments-x) - var(--payments-w));
+          height: 2px;
+      }
+
+      .connector.g {
+          left: calc(var(--items-x) + var(--items-w));
+          top: var(--items-link-y);
+          width: calc(var(--right-bus-x) - var(--items-x) - var(--items-w));
+          height: 2px;
+      }
+
+      .features {
+          display: grid;
+          grid-template-columns: repeat(4, minmax(0, 1fr));
+          gap: 18px;
+          padding: 0 0 72px;
+      }
+
+      .feature {
+          padding: 22px;
+          border-top: 3px solid var(--blue);
+          background: var(--paper);
+          border-radius: 8px;
+          box-shadow: 0 8px 22px rgba(24, 32, 47, 0.07);
+      }
+
+      .feature:nth-child(2) {
+          border-color: var(--green);
+      }
+
+      .feature:nth-child(3) {
+          border-color: var(--amber);
+      }
+
+      .feature:nth-child(4) {
+          border-color: var(--rose);
+      }
+
+      .feature h2 {
+          margin: 0;
+          font-size: 1rem;
+      }
+
+      .feature p {
+          margin: 10px 0 0;
+          color: var(--muted);
+          line-height: 1.6;
+      }
+
+      @media (max-width: 900px) {
+          .hero {
+              grid-template-columns: 1fr;
+              gap: 34px;
+              padding-top: 24px;
+          }
+
+          .product-shot {
+              min-height: 480px;
+          }
+
+          .canvas {
+              --users-x: 42px;
+              --orders-x: 220px;
+              --items-x: calc(100% - var(--items-w) - 48px);
+              --payments-x: calc(100% - var(--payments-w) - 76px);
+          }
+
+          .features {
+              grid-template-columns: repeat(2, minmax(0, 1fr));
+          }
+      }
+
+      @media (max-width: 620px) {
+          .shell {
+              width: min(100% - 24px, 1120px);
+          }
+
+          .nav {
+              align-items: flex-start;
+              flex-direction: column;
+          }
+
+          .nav-actions,
+          .hero-actions,
+          .stats {
+              width: 100%;
+          }
+
+          .button,
+          .stat {
+              flex: 1 1 auto;
+          }
+
+          .stats,
+          .features {
+              grid-template-columns: 1fr;
+          }
+
+          .product-shot {
+              min-height: 520px;
+          }
+
+          .canvas {
+              --node-w: 142px;
+              --users-x: 18px;
+              --users-y: 30px;
+              --items-x: calc(100% - var(--items-w) - 16px);
+              --items-y: 34px;
+              --orders-x: calc((100% - var(--orders-w)) / 2);
+              --orders-y: 208px;
+              --payments-x: calc(100% - var(--payments-w) - 20px);
+              --payments-y: 335px;
+              --left-bus-x: 10px;
+              --right-bus-x: calc(100% - 12px);
+          }
+
+          .connector {
+              opacity: 0.24;
+          }
+      }
+  </style>
+</head>
+<body>
+<main class="shell">
+  <nav class="nav" aria-label="Primary">
+    <a class="brand" href="#">
+      <span class="mark">ERD</span>
+      <span>Laravel DB ERD</span>
+    </a>
+    <div class="nav-actions">
+      <a class="button" href="docs.html">Docs</a>
+      <a class="button primary" href="https://packagist.org/packages/rtcoder/laravel-db-erd">Packagist</a>
+    </div>
+  </nav>
+
+  <section class="hero">
+    <div>
+      <p class="eyebrow">Artisan-driven database diagrams</p>
+      <h1>Laravel DB ERD Generator</h1>
+      <p class="lead">
+        Generate clean entity relationship diagrams from your Laravel database schema with support for Graphviz exports
+        and an interactive HTML view.
+      </p>
+      <div class="hero-actions">
+        <a class="button primary" href="docs.html">Get started</a>
+        <a class="button" href="docs.html#configuration">View config</a>
+      </div>
+      <div class="stats" aria-label="Package highlights">
+        <div class="stat">
+          <strong>5</strong>
+          <span>database drivers</span>
+        </div>
+        <div class="stat">
+          <strong>4</strong>
+          <span>export formats</span>
+        </div>
+        <div class="stat">
+          <strong>1</strong>
+          <span>Artisan command</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="product-shot" aria-label="Entity relationship diagram preview">
+      <div class="toolbar">
+        <div class="dots" aria-hidden="true"><span></span><span></span><span></span></div>
+        <code>php artisan erd:generate --format=html --driver=mysql</code>
+      </div>
+      <div class="canvas">
+        <span class="connector a"></span>
+        <span class="connector b"></span>
+        <span class="connector c"></span>
+        <span class="connector d"></span>
+        <span class="connector e"></span>
+        <span class="connector f"></span>
+        <span class="connector g"></span>
+
+        <article class="node users">
+          <header>users</header>
+          <ul>
+            <li>id</li>
+            <li>email</li>
+            <li>created_at</li>
+          </ul>
+        </article>
+
+        <article class="node orders">
+          <header>orders</header>
+          <ul>
+            <li>id</li>
+            <li>user_id</li>
+            <li>status</li>
+          </ul>
+        </article>
+
+        <article class="node items">
+          <header>order_items</header>
+          <ul>
+            <li>id</li>
+            <li>order_id</li>
+            <li>product_id</li>
+          </ul>
+        </article>
+
+        <article class="node payments">
+          <header>payments</header>
+          <ul>
+            <li>id</li>
+            <li>order_id</li>
+            <li>amount</li>
+          </ul>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <section class="features" aria-label="Features">
+    <article class="feature">
+      <h2>Laravel native</h2>
+      <p>Ships as a package with auto-discovery, publishable config, publishable views, and one Artisan command.</p>
+    </article>
+    <article class="feature">
+      <h2>Driver aware</h2>
+      <p>Resolves metadata through MySQL, PostgreSQL, SQLite, SQL Server, and Oracle relation readers.</p>
+    </article>
+    <article class="feature">
+      <h2>Export friendly</h2>
+      <p>Outputs PDF, PNG, SVG, and HTML diagrams so teams can use the same schema map in different workflows.</p>
+    </article>
+    <article class="feature">
+      <h2>Customizable</h2>
+      <p>Override the Blade view and tune output settings through the package config.</p>
+    </article>
+  </section>
+</main>
+</body>
+</html>

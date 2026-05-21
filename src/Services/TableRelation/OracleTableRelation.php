@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Rtcoder\LaravelERD\Services\TableRelation;
 
 use Illuminate\Support\Facades\DB;
@@ -7,15 +9,13 @@ use Rtcoder\LaravelERD\Services\TableRelation\Interface\TableRelationInterface;
 
 class OracleTableRelation implements TableRelationInterface
 {
-
     /**
-     * @return array
+     * @return array<int, array{name: string, relations: array<int, array{column: string, referenced_table: string, referenced_column: string}>}>
      */
     public function getTableRelations(): array
     {
         $tables = [];
 
-        // Pobierz wszystkie tabele w bieżącej bazie danych
         $rawTables = DB::select("
             SELECT table_name 
             FROM all_tables 
@@ -25,7 +25,6 @@ class OracleTableRelation implements TableRelationInterface
         foreach ($rawTables as $table) {
             $tableName = $table->table_name;
 
-            // Pobierz klucze obce dla tabeli
             $foreignKeys = DB::select("
                 SELECT 
                     a.table_name AS source_table,
@@ -53,14 +52,14 @@ class OracleTableRelation implements TableRelationInterface
             $relations = [];
             foreach ($foreignKeys as $fk) {
                 $relations[] = [
-                    'column' => $fk->source_column,
-                    'referenced_table' => $fk->target_table,
-                    'referenced_column' => $fk->target_column,
+                    'column' => (string) $fk->source_column,
+                    'referenced_table' => (string) $fk->target_table,
+                    'referenced_column' => (string) $fk->target_column,
                 ];
             }
 
             $tables[] = [
-                'name' => $tableName,
+                'name' => (string) $tableName,
                 'relations' => $relations,
             ];
         }

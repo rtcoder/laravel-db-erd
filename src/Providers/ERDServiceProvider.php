@@ -1,39 +1,42 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Rtcoder\LaravelERD\Providers;
 
 use Illuminate\Support\ServiceProvider;
+use Rtcoder\LaravelERD\Commands\DoctorERDCommand;
 use Rtcoder\LaravelERD\Commands\GenerateERDCommand;
+use Rtcoder\LaravelERD\Contracts\ERDGeneratorInterface;
 use Rtcoder\LaravelERD\Services\ERDGenerator;
 
 class ERDServiceProvider extends ServiceProvider
 {
-    /**
-     * Bootstrap any application services.
-     *
-     * @return void
-     */
     public function boot(): void
     {
         $this->loadViewsFrom(__DIR__ . '/../resources/views', 'laravel-erd');
+        $this->publishes([
+            __DIR__ . '/../resources/views' => resource_path('views/vendor/laravel-erd'),
+        ], 'db-erd-views');
         $this->publishes([
             __DIR__ . '/../resources/views' => resource_path('views/vendor/laravel-erd'),
         ], 'views');
 
         $this->publishes([
             __DIR__ . '/../config/erd.php' => config_path('erd.php'),
+        ], 'db-erd-config');
+        $this->publishes([
+            __DIR__ . '/../config/erd.php' => config_path('erd.php'),
         ], 'config');
 
         if ($this->app->runningInConsole()) {
-            $this->commands([GenerateERDCommand::class]);
+            $this->commands([
+                DoctorERDCommand::class,
+                GenerateERDCommand::class,
+            ]);
         }
     }
 
-    /**
-     * Register any application services.
-     *
-     * @return void
-     */
     public function register(): void
     {
         $this->mergeConfigFrom(
@@ -41,8 +44,11 @@ class ERDServiceProvider extends ServiceProvider
             'erd'
         );
 
-        $this->app->singleton('erd-generator', function ($app) {
+        $this->app->singleton(ERDGenerator::class, function (): ERDGenerator {
             return new ERDGenerator();
         });
+
+        $this->app->alias(ERDGenerator::class, ERDGeneratorInterface::class);
+        $this->app->alias(ERDGenerator::class, 'erd-generator');
     }
 }
