@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Tests\Unit;
 
 use PHPUnit\Framework\TestCase;
-use Rtcoder\LaravelERD\Services\TableRelation\Exception\InvalidConnectionNameException;
+use Rtcoder\LaravelERD\Exceptions\InvalidConnectionNameException;
 use Rtcoder\LaravelERD\Services\TableRelation\MysqlTableRelation;
 use Rtcoder\LaravelERD\Services\TableRelation\OracleTableRelation;
 use Rtcoder\LaravelERD\Services\TableRelation\PostgresTableRelation;

@@ -8,10 +8,10 @@ use Illuminate\Support\Facades\File;
 use Rtcoder\LaravelERD\Exceptions\DirectoryCreationException;
 use Rtcoder\LaravelERD\Exceptions\FileWriteException;
 use Rtcoder\LaravelERD\Exceptions\GraphvizRenderException;
+use Rtcoder\LaravelERD\Exceptions\InvalidConnectionNameException;
 use Rtcoder\LaravelERD\Exceptions\TemporaryFileCreationException;
 use Rtcoder\LaravelERD\Exceptions\UnsupportedOutputFormatException;
 use Rtcoder\LaravelERD\Exceptions\ViewNotFoundException;
-use Rtcoder\LaravelERD\Services\TableRelation\Exception\InvalidConnectionNameException;
 use Rtcoder\LaravelERD\Services\TableRelation\TableRelationResolver;
 use Throwable;
 

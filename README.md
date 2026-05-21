@@ -88,6 +88,37 @@ return [
 ];
 ```
 
+## Exceptions
+The package exposes concrete exceptions so you can handle generator failures without catching a generic `Exception`.
+
+| Exception | When it is thrown |
+| --- | --- |
+| `Rtcoder\LaravelERD\Exceptions\UnsupportedOutputFormatException` | The output file extension is not one of `pdf`, `png`, `svg`, or `html`. |
+| `Rtcoder\LaravelERD\Exceptions\InvalidConnectionNameException` | The selected database driver is not supported. |
+| `Rtcoder\LaravelERD\Exceptions\DirectoryCreationException` | The output directory cannot be created. |
+| `Rtcoder\LaravelERD\Exceptions\TemporaryFileCreationException` | The temporary DOT file for Graphviz cannot be created. |
+| `Rtcoder\LaravelERD\Exceptions\FileWriteException` | The generated DOT or HTML file cannot be written. |
+| `Rtcoder\LaravelERD\Exceptions\GraphvizRenderException` | Graphviz exits with a non-zero status while rendering PDF, PNG, or SVG output. |
+| `Rtcoder\LaravelERD\Exceptions\ViewNotFoundException` | The HTML diagram Blade view cannot be found in the application or package paths. |
+| `Rtcoder\LaravelERD\Exceptions\ERDException` | Base exception for runtime generation failures. |
+
+Example:
+
+```php
+use Rtcoder\LaravelERD\Exceptions\ERDException;
+use Rtcoder\LaravelERD\Exceptions\InvalidConnectionNameException;
+use Rtcoder\LaravelERD\Exceptions\UnsupportedOutputFormatException;
+use Rtcoder\LaravelERD\Services\ERDGenerator;
+
+try {
+    app(ERDGenerator::class)->generate(storage_path('erd/schema.svg'), 'pgsql');
+} catch (UnsupportedOutputFormatException|InvalidConnectionNameException $exception) {
+    report($exception);
+} catch (ERDException $exception) {
+    report($exception);
+}
+```
+
 ---
 
 ## Troubleshooting

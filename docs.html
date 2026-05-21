@@ -378,6 +378,7 @@
         <a href="#installation">Installation</a>
         <a href="#usage">Usage</a>
         <a href="#configuration">Configuration</a>
+        <a href="#exceptions">Exceptions</a>
         <a href="#troubleshooting">Troubleshooting</a>
       </aside>
     </section>
@@ -391,6 +392,7 @@
           <a href="#usage">Usage</a>
           <a href="#drivers">Drivers</a>
           <a href="#configuration">Configuration</a>
+          <a href="#exceptions">Exceptions</a>
           <a href="#troubleshooting">Troubleshooting</a>
         </nav>
       </aside>
@@ -479,6 +481,59 @@ return [
     'output_format' =&gt; 'pdf',
     'exclude_tables' =&gt; ['migrations', 'jobs', 'failed_jobs'],
 ];</code></pre>
+        </section>
+
+        <section class="section" id="exceptions">
+          <h2>Exceptions</h2>
+          <p>The package exposes concrete exception classes so applications can react to specific generator failures.</p>
+          <div class="grid">
+            <div class="mini">
+              <strong>UnsupportedOutputFormatException</strong>
+              <span>The output file extension is not <code>pdf</code>, <code>png</code>, <code>svg</code>, or <code>html</code>.</span>
+            </div>
+            <div class="mini">
+              <strong>InvalidConnectionNameException</strong>
+              <span>The selected database driver is not supported.</span>
+            </div>
+            <div class="mini">
+              <strong>DirectoryCreationException</strong>
+              <span>The output directory cannot be created.</span>
+            </div>
+            <div class="mini">
+              <strong>TemporaryFileCreationException</strong>
+              <span>The temporary DOT file for Graphviz cannot be created.</span>
+            </div>
+            <div class="mini">
+              <strong>FileWriteException</strong>
+              <span>The generated DOT or HTML file cannot be written.</span>
+            </div>
+            <div class="mini">
+              <strong>GraphvizRenderException</strong>
+              <span>Graphviz exits with a non-zero status while rendering PDF, PNG, or SVG output.</span>
+            </div>
+            <div class="mini">
+              <strong>ViewNotFoundException</strong>
+              <span>The HTML diagram Blade view cannot be found in the application or package paths.</span>
+            </div>
+            <div class="mini">
+              <strong>ERDException</strong>
+              <span>Base exception for runtime generation failures.</span>
+            </div>
+          </div>
+
+          <h3>Example handling</h3>
+          <pre><code>use Rtcoder\LaravelERD\Exceptions\ERDException;
+use Rtcoder\LaravelERD\Exceptions\InvalidConnectionNameException;
+use Rtcoder\LaravelERD\Exceptions\UnsupportedOutputFormatException;
+use Rtcoder\LaravelERD\Services\ERDGenerator;
+
+try {
+    app(ERDGenerator::class)-&gt;generate(storage_path('erd/schema.svg'), 'pgsql');
+} catch (UnsupportedOutputFormatException|InvalidConnectionNameException $exception) {
+    report($exception);
+} catch (ERDException $exception) {
+    report($exception);
+}</code></pre>
         </section>
 
         <section class="section" id="troubleshooting">
