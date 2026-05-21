@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Rtcoder\LaravelERD\Services;
 
 use Illuminate\Support\Facades\File;
+use Rtcoder\LaravelERD\Enums\OutputFormat;
 use Rtcoder\LaravelERD\Exceptions\DirectoryCreationException;
 use Rtcoder\LaravelERD\Exceptions\FileWriteException;
 use Rtcoder\LaravelERD\Exceptions\GraphvizRenderException;
@@ -17,8 +18,6 @@ use Throwable;
 
 class ERDGenerator
 {
-    private const SUPPORTED_FORMATS = ['pdf', 'png', 'svg', 'html'];
-
     public function __construct(
         private readonly ?TableRelationResolver $relationResolver = null,
     ) {
@@ -31,15 +30,19 @@ class ERDGenerator
      */
     public function generate(string $outputFile, string $driver): void
     {
-        $format = strtolower((string) pathinfo($outputFile, PATHINFO_EXTENSION));
+        $extension = strtolower((string) pathinfo($outputFile, PATHINFO_EXTENSION));
+        $format = OutputFormat::tryFrom($extension);
 
-        if (!in_array($format, self::SUPPORTED_FORMATS, true)) {
-            throw UnsupportedOutputFormatException::forFormat($format, self::SUPPORTED_FORMATS);
+        if ($format === null) {
+            throw UnsupportedOutputFormatException::forFormat(
+                $extension,
+                OutputFormat::values()
+            );
         }
 
         $tables = $this->getTablesAndRelations($driver);
 
-        if ($format === 'html') {
+        if ($format === OutputFormat::Html) {
             $this->renderGraphHtml($tables, $outputFile);
             return;
         }
@@ -115,7 +118,7 @@ class ERDGenerator
      * @throws GraphvizRenderException
      * @throws TemporaryFileCreationException
      */
-    protected function renderGraph(string $dotGraph, string $outputFile, string $format): void
+    protected function renderGraph(string $dotGraph, string $outputFile, OutputFormat $format): void
     {
         $directory = dirname($outputFile);
         $this->ensureDirectoryExists($directory);
@@ -140,7 +143,7 @@ class ERDGenerator
 
         $command = sprintf(
             'dot -T%s -o %s %s',
-            escapeshellarg($format),
+            escapeshellarg($format->value),
             escapeshellarg($outputFile),
             escapeshellarg($dotFile)
         );
@@ -149,7 +152,7 @@ class ERDGenerator
         @unlink($dotFile);
 
         if ($returnVar !== 0) {
-            throw GraphvizRenderException::failed($format, $outputFile, $output);
+            throw GraphvizRenderException::failed($format->value, $outputFile, $output);
         }
     }
 
