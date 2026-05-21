@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Rtcoder\LaravelERD\Services\TableRelation;
 
 use Illuminate\Support\Facades\DB;
@@ -7,15 +9,13 @@ use Rtcoder\LaravelERD\Services\TableRelation\Interface\TableRelationInterface;
 
 class SqliteTableRelation implements TableRelationInterface
 {
-
     /**
-     * @return array
+     * @return array<int, array{name: string, relations: array<int, array{column: string, referenced_table: string, referenced_column: string}>}>
      */
     public function getTableRelations(): array
     {
         $tables = [];
 
-        // Pobierz wszystkie tabele w bazie SQLite
         $rawTables = DB::select("
             SELECT name 
             FROM sqlite_master 
@@ -23,19 +23,17 @@ class SqliteTableRelation implements TableRelationInterface
         ");
 
         foreach ($rawTables as $table) {
-            $tableName = $table->name;
+            $tableName = (string) $table->name;
+            $quotedTableName = '"' . str_replace('"', '""', $tableName) . '"';
 
-            // Pobierz klucze obce dla tabeli
-            $foreignKeys = DB::select("
-                PRAGMA foreign_key_list($tableName);
-            ");
+            $foreignKeys = DB::select("PRAGMA foreign_key_list($quotedTableName);");
 
             $relations = [];
             foreach ($foreignKeys as $fk) {
                 $relations[] = [
-                    'column' => $fk->from,
-                    'referenced_table' => $fk->table,
-                    'referenced_column' => $fk->to,
+                    'column' => (string) $fk->{'from'},
+                    'referenced_table' => (string) $fk->table,
+                    'referenced_column' => (string) $fk->to,
                 ];
             }
 

@@ -1,14 +1,16 @@
 <?php
 
+declare(strict_types=1);
+
 return [
     /**
-     * psql - PostgreSQL
+     * pgsql - PostgreSQL
      * mysql - MySQL
      * sqlite - SQLite
      * sqlsrv - Microsoft SQL Server
      * oracle - Oracle database
      */
-    'default_driver' => env('DB_ERD_DRIVER', 'psql'),
+    'default_driver' => env('DB_ERD_DRIVER', env('DB_CONNECTION', 'pgsql')),
     'output_directory' => storage_path('erd'),
     'output_name' => 'erd_diagram',
     /**

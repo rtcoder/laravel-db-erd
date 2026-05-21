@@ -1,36 +1,49 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Rtcoder\LaravelERD\Services;
 
-use Exception;
 use Illuminate\Support\Facades\File;
-use InvalidArgumentException;
-use Rtcoder\LaravelERD\Services\TableRelation\Exception\InvalidConnectionNameException;
+use Rtcoder\LaravelERD\Contracts\ERDGeneratorInterface;
+use Rtcoder\LaravelERD\Enums\OutputFormat;
+use Rtcoder\LaravelERD\Exceptions\DirectoryCreationException;
+use Rtcoder\LaravelERD\Exceptions\FileWriteException;
+use Rtcoder\LaravelERD\Exceptions\GraphvizRenderException;
+use Rtcoder\LaravelERD\Exceptions\InvalidConnectionNameException;
+use Rtcoder\LaravelERD\Exceptions\TemporaryFileCreationException;
+use Rtcoder\LaravelERD\Exceptions\UnsupportedOutputFormatException;
+use Rtcoder\LaravelERD\Exceptions\ViewNotFoundException;
 use Rtcoder\LaravelERD\Services\TableRelation\TableRelationResolver;
-use RuntimeException;
+use Throwable;
 
-class ERDGenerator
+class ERDGenerator implements ERDGeneratorInterface
 {
+    public function __construct(
+        private readonly ?TableRelationResolver $relationResolver = null,
+    ) {
+    }
+
     /**
      * Generate an ERD diagram and save it to a file.
      *
-     * @param string $outputFile
-     * @param string $driver
-     * @return void The full path to the generated file.
-     * @throws Exception
+     * @throws Throwable
      */
     public function generate(string $outputFile, string $driver): void
     {
-        $format = pathinfo($outputFile, PATHINFO_EXTENSION);
+        $extension = strtolower((string) pathinfo($outputFile, PATHINFO_EXTENSION));
+        $format = OutputFormat::tryFrom($extension);
 
-        $supportedFormats = ['pdf', 'png', 'svg', 'html'];
-        if (!in_array($format, $supportedFormats)) {
-            throw new InvalidArgumentException("Unsupported format: $format");
+        if ($format === null) {
+            throw UnsupportedOutputFormatException::forFormat(
+                $extension,
+                OutputFormat::values()
+            );
         }
 
         $tables = $this->getTablesAndRelations($driver);
 
-        if ($format === 'html') {
+        if ($format === OutputFormat::Html) {
             $this->renderGraphHtml($tables, $outputFile);
             return;
         }
@@ -43,13 +56,13 @@ class ERDGenerator
     /**
      * Get tables and their relationships from the database.
      *
-     * @param string $driver
-     * @return array
      * @throws InvalidConnectionNameException
+     *
+     * @return array<int, array{name: string, relations: array<int, array{column: string, referenced_table: string, referenced_column: string}>}>
      */
     protected function getTablesAndRelations(string $driver): array
     {
-        $relationResolver = new TableRelationResolver();
+        $relationResolver = $this->relationResolver ?? new TableRelationResolver();
         $relationResolver->setConnection($driver);
 
         $tableRelationClass = $relationResolver->resolve();
@@ -59,8 +72,7 @@ class ERDGenerator
     /**
      * Generate a Graphviz DOT representation of the database schema.
      *
-     * @param array $tables
-     * @return string
+     * @param array<int, array{name: string, relations: array<int, array{column: string, referenced_table: string, referenced_column: string}>}> $tables
      */
     protected function generateDotGraph(array $tables): string
     {
@@ -69,10 +81,16 @@ class ERDGenerator
         $dot .= "    node [shape=record];\n";
 
         foreach ($tables as $table) {
-            $dot .= "    {$table['name']} [label=\"{ {$table['name']} | ";
+            $tableName = (string) $table['name'];
+            $dot .= '    ' . $this->quoteDotIdentifier($tableName) . ' [label="' . $this->escapeDotLabel("{ {$tableName} | ");
 
             foreach ($table['relations'] as $relation) {
-                $dot .= "+ {$relation['column']} → {$relation['referenced_table']}.{$relation['referenced_column']}\\l";
+                $dot .= $this->escapeDotLabel(sprintf(
+                    '+ %s -> %s.%s',
+                    $relation['column'],
+                    $relation['referenced_table'],
+                    $relation['referenced_column']
+                )) . '\\l';
             }
 
             $dot .= "}\"];\n";
@@ -80,7 +98,12 @@ class ERDGenerator
 
         foreach ($tables as $table) {
             foreach ($table['relations'] as $relation) {
-                $dot .= "    {$table['name']} -> {$relation['referenced_table']} [label=\"{$relation['column']} → {$relation['referenced_column']}\"];\n";
+                $dot .= sprintf(
+                    "    %s -> %s [label=\"%s\"];\n",
+                    $this->quoteDotIdentifier((string) $table['name']),
+                    $this->quoteDotIdentifier((string) $relation['referenced_table']),
+                    $this->escapeDotLabel(sprintf('%s -> %s', $relation['column'], $relation['referenced_column']))
+                );
             }
         }
 
@@ -91,41 +114,59 @@ class ERDGenerator
     /**
      * Render the graph using the Graphviz tool.
      *
-     * @param string $dotGraph
-     * @param string $outputFile
-     * @param string $format
-     * @throws Exception
+     * @throws DirectoryCreationException
+     * @throws FileWriteException
+     * @throws GraphvizRenderException
+     * @throws TemporaryFileCreationException
      */
-    protected function renderGraph(string $dotGraph, string $outputFile, string $format): void
+    protected function renderGraph(string $dotGraph, string $outputFile, OutputFormat $format): void
     {
         $directory = dirname($outputFile);
         $this->ensureDirectoryExists($directory);
 
-        $tempFile = tempnam(sys_get_temp_dir(), 'erd') . '.dot';
-        file_put_contents($tempFile, $dotGraph);
+        $tempFile = tempnam(sys_get_temp_dir(), 'erd');
 
-        $command = escapeshellcmd("dot -T{$format} -o " . escapeshellarg($outputFile) . " " . escapeshellarg($tempFile));
+        if ($tempFile === false) {
+            throw TemporaryFileCreationException::forDirectory(sys_get_temp_dir());
+        }
+
+        $dotFile = $tempFile . '.dot';
+
+        if (!rename($tempFile, $dotFile)) {
+            @unlink($tempFile);
+            throw TemporaryFileCreationException::forDirectory(sys_get_temp_dir());
+        }
+
+        if (file_put_contents($dotFile, $dotGraph) === false) {
+            @unlink($dotFile);
+            throw FileWriteException::forPath($dotFile);
+        }
+
+        $command = sprintf(
+            'dot -T%s -o %s %s',
+            escapeshellarg($format->value),
+            escapeshellarg($outputFile),
+            escapeshellarg($dotFile)
+        );
         exec($command, $output, $returnVar);
 
-        unlink($tempFile);
+        @unlink($dotFile);
 
         if ($returnVar !== 0) {
-            throw new Exception("Graphviz failed to render the graph. Make sure Graphviz is installed.");
+            throw GraphvizRenderException::failed($format->value, $outputFile, $output);
         }
     }
 
     /**
-     * @param array $tables
-     * @param string $outputFile
-     * @return void
-     * @throws Exception
+     * @throws Throwable
+     *
+     * @param array<int, array{name: string, relations: array<int, array{column: string, referenced_table: string, referenced_column: string}>}> $tables
      */
     protected function renderGraphHtml(array $tables, string $outputFile): void
     {
         $directory = dirname($outputFile);
         $this->ensureDirectoryExists($directory);
 
-        // Konwertowanie danych na format dla D3.js
         $nodes = [];
         $links = [];
         foreach ($tables as $table) {
@@ -134,7 +175,7 @@ class ERDGenerator
                 $links[] = [
                     'source' => $table['name'],
                     'target' => $relation['referenced_table'],
-                    'value' => 1
+                    'value' => 1,
                 ];
             }
         }
@@ -152,19 +193,33 @@ class ERDGenerator
         } elseif (File::exists($packageViewPath)) {
             $htmlContent = view()->file($packageViewPath, compact('diagramData'))->render();
         } else {
-            throw new Exception("View file not found in either project or package.");
+            throw ViewNotFoundException::forPaths([$projectViewPath, $packageViewPath]);
         }
 
-        // Zapisanie pliku HTML
-        file_put_contents($outputFile, $htmlContent);
+        if (file_put_contents($outputFile, $htmlContent) === false) {
+            throw FileWriteException::forPath($outputFile);
+        }
     }
 
+    /**
+     * @throws DirectoryCreationException
+     */
     private function ensureDirectoryExists(string $directory): void
     {
         if (!is_dir($directory)) {
             if (!mkdir($directory, 0755, true) && !is_dir($directory)) {
-                throw new RuntimeException("Failed to create directory: $directory");
+                throw DirectoryCreationException::forPath($directory);
             }
         }
+    }
+
+    private function quoteDotIdentifier(string $identifier): string
+    {
+        return '"' . str_replace(['\\', '"'], ['\\\\', '\"'], $identifier) . '"';
+    }
+
+    private function escapeDotLabel(string $label): string
+    {
+        return str_replace(['\\', '"'], ['\\\\', '\"'], $label);
     }
 }

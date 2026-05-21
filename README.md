@@ -17,7 +17,7 @@ A Laravel package for generating Entity-Relationship Diagrams (ERD) of your data
 
 ### Requirements
 - PHP 8.1 or higher
-- Laravel 9.x or higher
+- Laravel 10.x or higher
 - [Graphviz](https://graphviz.org/) installed on your system
 
 ### Step 1: Install the package
@@ -63,6 +63,76 @@ php artisan erd:generate --output=storage/erd/erd_diagram.pdf --driver=mysql
 ```
 The `--output` option specifies the file path for the generated diagram.
 
+**Check Graphviz availability**
+```bash
+php artisan erd:doctor
+```
+The command verifies that the Graphviz `dot` binary is available in PATH and prints its detected path and version.
+
+**Generate from your application code**
+```php
+use Rtcoder\LaravelERD\Contracts\ERDGeneratorInterface;
+
+class ExportSchemaController
+{
+    public function __invoke(ERDGeneratorInterface $generator): void
+    {
+        $generator->generate(storage_path('erd/schema.svg'), 'pgsql');
+    }
+}
+```
+
+You can also resolve the service from the container:
+```php
+app(ERDGeneratorInterface::class)->generate(storage_path('erd/schema.html'), 'mysql');
+app('erd-generator')->generate(storage_path('erd/schema.pdf'), 'pgsql');
+```
+
+## Service usage
+The package registers the generator in Laravel's service container, so you can generate diagrams from controllers, jobs, commands, scheduled tasks, tests, or any other application service.
+
+Available bindings:
+
+| Binding | Description |
+| --- | --- |
+| `Rtcoder\LaravelERD\Contracts\ERDGeneratorInterface` | Recommended dependency injection target. |
+| `Rtcoder\LaravelERD\Services\ERDGenerator` | Concrete generator implementation. |
+| `erd-generator` | String alias for quick container resolution. |
+
+Controller example:
+```php
+namespace App\Http\Controllers;
+
+use Rtcoder\LaravelERD\Contracts\ERDGeneratorInterface;
+
+class ExportSchemaController
+{
+    public function __invoke(ERDGeneratorInterface $generator): string
+    {
+        $path = storage_path('erd/schema.svg');
+
+        $generator->generate($path, 'pgsql');
+
+        return $path;
+    }
+}
+```
+
+Queued job example:
+```php
+namespace App\Jobs;
+
+use Rtcoder\LaravelERD\Contracts\ERDGeneratorInterface;
+
+class GenerateSchemaDiagram
+{
+    public function handle(ERDGeneratorInterface $generator): void
+    {
+        $generator->generate(storage_path('erd/schema.html'), config('erd.default_driver'));
+    }
+}
+```
+
 **Supported Databases**
 * MySQL
 * PostgreSQL
@@ -70,17 +140,21 @@ The `--output` option specifies the file path for the generated diagram.
 * SQL Server
 * Oracle
 
+Available database drivers are represented by the `Rtcoder\LaravelERD\Enums\DatabaseConnection` enum. PostgreSQL also accepts `postgres`, `postgresql`, and `psql` aliases.
+
 **Supported output formats**
 * PDF
 * SVG
 * PNG
 * HTML
 
+Available output formats are represented by the `Rtcoder\LaravelERD\Enums\OutputFormat` enum.
+
 ## Configuration
-You can customize the package by modifying the configuration file (`config/db-erd.php`):
+You can customize the package by modifying the configuration file (`config/erd.php`):
 ```php
 return [
-    'default_driver' => env('DB_ERD_DRIVER', 'mysql'),
+    'default_driver' => env('DB_ERD_DRIVER', env('DB_CONNECTION', 'pgsql')),
     'output_directory' => storage_path('erd'),
     'output_name' => 'erd_diagram',
     'output_format' => 'pdf',
@@ -88,13 +162,72 @@ return [
 ];
 ```
 
+## Exceptions
+The package exposes concrete exceptions so you can handle generator failures without catching a generic `Exception`.
+
+| Exception | When it is thrown |
+| --- | --- |
+| `Rtcoder\LaravelERD\Exceptions\UnsupportedOutputFormatException` | The output file extension is not one of `pdf`, `png`, `svg`, or `html`. |
+| `Rtcoder\LaravelERD\Exceptions\InvalidConnectionNameException` | The selected database driver is not supported. |
+| `Rtcoder\LaravelERD\Exceptions\DirectoryCreationException` | The output directory cannot be created. |
+| `Rtcoder\LaravelERD\Exceptions\TemporaryFileCreationException` | The temporary DOT file for Graphviz cannot be created. |
+| `Rtcoder\LaravelERD\Exceptions\FileWriteException` | The generated DOT or HTML file cannot be written. |
+| `Rtcoder\LaravelERD\Exceptions\GraphvizRenderException` | Graphviz exits with a non-zero status while rendering PDF, PNG, or SVG output. |
+| `Rtcoder\LaravelERD\Exceptions\ViewNotFoundException` | The HTML diagram Blade view cannot be found in the application or package paths. |
+| `Rtcoder\LaravelERD\Exceptions\ERDException` | Base exception for runtime generation failures. |
+
+Example:
+
+```php
+use Rtcoder\LaravelERD\Exceptions\ERDException;
+use Rtcoder\LaravelERD\Exceptions\InvalidConnectionNameException;
+use Rtcoder\LaravelERD\Exceptions\UnsupportedOutputFormatException;
+use Rtcoder\LaravelERD\Contracts\ERDGeneratorInterface;
+
+try {
+    app(ERDGeneratorInterface::class)->generate(storage_path('erd/schema.svg'), 'pgsql');
+} catch (UnsupportedOutputFormatException|InvalidConnectionNameException $exception) {
+    report($exception);
+} catch (ERDException $exception) {
+    report($exception);
+}
+```
+
 ---
 
 ## Troubleshooting
-1. `Graphviz not found` Error\
-Ensure Graphviz is correctly installed and added to your system's PATH.
+### `Graphviz not found` error
+Ensure Graphviz is correctly installed and the `dot` binary is available in your system's PATH.
 
-2. Empty ERD Diagram\
+You can check this from Laravel with:
+```bash
+php artisan erd:doctor
+```
+
+#### macOS
+```bash
+brew install graphviz
+```
+
+#### Ubuntu / Debian
+```bash
+sudo apt install graphviz
+```
+
+#### Windows
+Install Graphviz from the [official download page](https://graphviz.org/download/), or use one of the package manager commands below:
+
+```powershell
+winget install graphviz
+```
+
+```powershell
+choco install graphviz
+```
+
+If the command still cannot find `dot`, restart your terminal and verify that the Graphviz `bin` directory is included in PATH.
+
+### Empty ERD Diagram
 Verify that your database schema has relationships (foreign keys).
 
 ---
