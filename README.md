@@ -70,11 +70,15 @@ The `--output` option specifies the file path for the generated diagram.
 * SQL Server
 * Oracle
 
+Available database drivers are represented by the `Rtcoder\LaravelERD\Enums\DatabaseConnection` enum. PostgreSQL also accepts `postgres`, `postgresql`, and `psql` aliases.
+
 **Supported output formats**
 * PDF
 * SVG
 * PNG
 * HTML
+
+Available output formats are represented by the `Rtcoder\LaravelERD\Enums\OutputFormat` enum.
 
 ## Configuration
 You can customize the package by modifying the configuration file (`config/erd.php`):

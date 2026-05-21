@@ -69,7 +69,7 @@ class TableRelationResolverTest extends TestCase
         $resolver->setConnection('mongodb');
 
         $this->expectException(InvalidConnectionNameException::class);
-        $this->expectExceptionMessage('Unsupported database driver [mongodb].');
+        $this->expectExceptionMessage('Unsupported database driver [mongodb]. Supported drivers: pgsql, mysql, sqlite, sqlsrv, oracle.');
 
         $resolver->resolve();
     }
